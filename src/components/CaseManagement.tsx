@@ -11,6 +11,7 @@ export function CaseManagement() {
     priority: "",
     search: ""
   });
+  const [pendingCase, setPendingCase] = useState<any | null>(null);
 
   const cases = useQuery(api.cases.getCases, {
     status: filters.status || undefined,
@@ -175,7 +176,22 @@ export function CaseManagement() {
 
       {/* Create Case Modal */}
       {showCreateForm && (
-        <CreateCaseModal onClose={() => setShowCreateForm(false)} />
+        <CreateCaseModal 
+          onClose={() => setShowCreateForm(false)} 
+          onSubmit={setPendingCase}
+        />
+      )}
+
+      {/* Case Confirmation Modal */}
+      {pendingCase && (
+        <CaseConfirmationModal 
+          caseData={pendingCase}
+          onConfirm={() => {
+            setPendingCase(null);
+            setShowCreateForm(false);
+          }}
+          onCancel={() => setPendingCase(null)}
+        />
       )}
 
       {/* Case Detail Modal */}
@@ -189,7 +205,7 @@ export function CaseManagement() {
   );
 }
 
-function CreateCaseModal({ onClose }: { onClose: () => void }) {
+function CreateCaseModal({ onClose, onSubmit }: { onClose: () => void, onSubmit: (data: any) => void }) {
   const [formData, setFormData] = useState({
     productName: "",
     adverseEvent: "",
@@ -204,30 +220,9 @@ function CreateCaseModal({ onClose }: { onClose: () => void }) {
     priority: "medium"
   });
 
-  const createCase = useMutation(api.cases.createCase);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    try {
-      await createCase({
-        productName: formData.productName,
-        adverseEvent: formData.adverseEvent,
-        eventDescription: formData.eventDescription,
-        eventDate: new Date(formData.eventDate).getTime(),
-        reportDate: new Date(formData.reportDate).getTime(),
-        seriousness: formData.seriousness,
-        patientAge: formData.patientAge ? parseInt(formData.patientAge) : undefined,
-        patientGender: formData.patientGender as any,
-        reporterType: formData.reporterType as any,
-        reporterCountry: formData.reporterCountry,
-        priority: formData.priority as any,
-      });
-      
-      onClose();
-    } catch (error) {
-      console.error("Error creating case:", error);
-    }
+    onSubmit(formData);
   };
 
   return (
@@ -419,6 +414,132 @@ function CreateCaseModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+function CaseConfirmationModal({ caseData, onConfirm, onCancel }: { 
+  caseData: any; 
+  onConfirm: () => void; 
+  onCancel: () => void;
+}) {
+  const createCase = useMutation(api.cases.createCase);
+
+  const handleCopy = () => {
+    const caseText = `
+Case Details:
+Product Name: ${caseData.productName}
+Adverse Event: ${caseData.adverseEvent}
+Event Description: ${caseData.eventDescription}
+Event Date: ${caseData.eventDate}
+Report Date: ${caseData.reportDate}
+Priority: ${caseData.priority}
+Seriousness: ${caseData.seriousness ? 'Yes' : 'No'}
+Patient Age: ${caseData.patientAge || 'Not specified'}
+Patient Gender: ${caseData.patientGender || 'Not specified'}
+Reporter Type: ${caseData.reporterType}
+Reporter Country: ${caseData.reporterCountry}
+    `.trim();
+
+    navigator.clipboard.writeText(caseText);
+    alert('Case details copied to clipboard!');
+  };
+
+  const handleConfirm = async () => {
+    try {
+      await createCase({
+        productName: caseData.productName,
+        adverseEvent: caseData.adverseEvent,
+        eventDescription: caseData.eventDescription,
+        eventDate: new Date(caseData.eventDate).getTime(),
+        reportDate: new Date(caseData.reportDate).getTime(),
+        seriousness: caseData.seriousness,
+        patientAge: caseData.patientAge ? parseInt(caseData.patientAge) : undefined,
+        patientGender: caseData.patientGender as any,
+        reporterType: caseData.reporterType as any,
+        reporterCountry: caseData.reporterCountry,
+        priority: caseData.priority as any,
+      });
+      onConfirm();
+    } catch (error) {
+      console.error("Error creating case:", error);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-semibold">Confirm Case Creation</h3>
+          <button
+            onClick={onCancel}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="space-y-4 text-sm">
+          <h4 className="font-semibold">Case Details</h4>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <span className="font-medium">Product Name:</span> {caseData.productName}
+            </div>
+            <div>
+              <span className="font-medium">Priority:</span> <PriorityBadge priority={caseData.priority} />
+            </div>
+            <div className="col-span-2">
+              <span className="font-medium">Adverse Event:</span> {caseData.adverseEvent}
+            </div>
+            <div className="col-span-2">
+              <span className="font-medium">Event Description:</span>
+              <p className="mt-1">{caseData.eventDescription}</p>
+            </div>
+            <div>
+              <span className="font-medium">Event Date:</span> {caseData.eventDate}
+            </div>
+            <div>
+              <span className="font-medium">Report Date:</span> {caseData.reportDate}
+            </div>
+            <div>
+              <span className="font-medium">Patient Age:</span> {caseData.patientAge || "Not specified"}
+            </div>
+            <div>
+              <span className="font-medium">Patient Gender:</span> {caseData.patientGender || "Not specified"}
+            </div>
+            <div>
+              <span className="font-medium">Reporter Type:</span> {caseData.reporterType}
+            </div>
+            <div>
+              <span className="font-medium">Reporter Country:</span> {caseData.reporterCountry}
+            </div>
+            <div>
+              <span className="font-medium">Seriousness:</span> {caseData.seriousness ? "Yes" : "No"}
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <button
+              onClick={handleCopy}
+              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+            >
+              Copy Case
+            </button>
+            <button
+              onClick={onCancel}
+              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirm}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Confirm Creation
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CaseDetailModal({ caseId, onClose }: { caseId: Id<"cases">; onClose: () => void }) {
   const caseData = useQuery(api.cases.getCase, { caseId });
   const updateStatus = useMutation(api.cases.updateCaseStatus);
@@ -458,7 +579,6 @@ function CaseDetailModal({ caseId, onClose }: { caseId: Id<"cases">; onClose: ()
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Case Information */}
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-gray-50 rounded-lg p-4">
               <h4 className="font-semibold mb-3">Case Information</h4>
@@ -512,7 +632,6 @@ function CaseDetailModal({ caseId, onClose }: { caseId: Id<"cases">; onClose: ()
             </div>
           </div>
 
-          {/* Actions and Workflow */}
           <div className="space-y-6">
             <div className="bg-gray-50 rounded-lg p-4">
               <h4 className="font-semibold mb-3">Actions</h4>

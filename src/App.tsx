@@ -21,7 +21,7 @@ export default function App() {
         <header className="sticky top-0 z-10 bg-white border-b shadow-sm">
           <div className="flex justify-between items-center px-6 py-4">
             <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-blue-600">PharmVigilance</h1>
+              <h1 className="text-2xl font-bold text-red-700">ZANE Argus</h1>
               <span className="text-sm text-gray-500">Safety Monitoring Platform</span>
             </div>
             <div className="flex items-center space-x-4">
@@ -43,8 +43,8 @@ export default function App() {
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
           <div className="w-full max-w-md mx-auto bg-white rounded-lg shadow-lg p-8">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-blue-600 mb-2">PharmVigilance</h1>
-              <p className="text-gray-600">Safety Monitoring Platform</p>
+              <h1 className="text-3xl font-bold text-red-700 mb-2">ZANE Argus</h1>
+              <p className="text-gray-600">Zane ProEd</p>
               <p className="text-sm text-gray-500 mt-2">Sign in to access the system</p>
             </div>
             <SignInForm />
